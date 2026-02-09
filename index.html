@@ -8,20 +8,17 @@
   <style>
     body{
       margin:0;
-      height:100vh;
+      min-height:100vh;
       display:flex;
       align-items:center;
       justify-content:center;
       background:#f8f7f5;
       font-family:sans-serif;
     }
-    #container{
-      text-align:center;
-    }
-    canvas{
-      display:block;
-      margin:0 auto;
-    }
+    #container{ text-align:center; }
+    canvas{ display:block; margin:0 auto; }
+    /* 让手机点输入框时页面不乱跳一点 */
+    input{ -webkit-appearance:none; appearance:none; }
   </style>
 </head>
 <body>

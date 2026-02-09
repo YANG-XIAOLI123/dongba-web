@@ -1,23 +1,16 @@
 let inputBox;
-let images = {};       // key 可以是：单字“人” 或词组“日出/春天/好朋友”
+let images = {};       // key: 单字“人” 或词组“日出/春天/好朋友”
 let currentImgs = [];
 
-// 画布尺寸（你可改）
-const CANVAS_W = 1200;
-const CANVAS_H = 520;
+// 自适应参数
+const MAX_CANVAS_W = 1200;
+const MAX_CANVAS_H = 700;
 
-// 输入框左右留白（越大留白越多；越小越“占满”）
-const INPUT_PADDING = 140;
-
-// 图案行占画布宽度比例（越大越铺满）
-const FILL_RATIO = 0.88;
-
-// 支持的“最长词组长度”（2字/3字/4字都可改）
-const MAX_TOKEN_LEN = 3;
+const MAX_TOKEN_LEN = 3; // 支持最长 3 字指令
+const FILL_RATIO = 0.88; // 图案行占画布宽度比例
 
 function preload() {
-  // ===== 单字（示例，按你的真实文件名改）=====
- images["太阳"] = loadImage("ri.png");
+   images["太阳"] = loadImage("ri.png");
  images["爸爸"] = loadImage("baba.png");
  images["眼睛"] = loadImage("yanjing.png");
  images["妈妈"] = loadImage("mama.png");
@@ -37,42 +30,30 @@ function preload() {
  images["右"] = loadImage("you.png");
  images["果实"] = loadImage("zhongzi.png");
  images["商议"] = loadImage("jiaotan.png");
-
-  
 }
 
 function setup() {
-  const c = createCanvas(CANVAS_W, CANVAS_H);
+  const c = createCanvas(getCanvasWidth(), getCanvasHeight());
   c.parent("container");
 
-  // 输入框
   inputBox = createInput("");
   inputBox.parent("container");
 
-  // 样式（极简）
-  inputBox.style("font-size", "18px");
-  inputBox.style("padding", "8px 10px");
-  inputBox.style("border", "none");
-  inputBox.style("border-bottom", "1px solid #000");
-  inputBox.style("outline", "none");
-  inputBox.style("background", "transparent");
-  inputBox.style("text-align", "center");
-
+  styleInput();
   layoutInput();
 }
 
 function draw() {
   background(248, 247, 245);
 
-  // 提示文字
+  // 顶部提示
   fill(160);
   textAlign(CENTER);
-  textSize(12);
+  textSize(isMobile() ? 12 : 13);
   text("输入文字（支持1-3字词组），生成对应的视觉符号", width / 2, 34);
 
-  // 1) 解析输入：最长匹配分词（3字→2字→1字）
-  const textInput = inputBox.value();
-  const tokens = tokenizeLongestMatch(textInput, MAX_TOKEN_LEN);
+  // 1) 最长匹配分词（3→2→1）
+  const tokens = tokenizeLongestMatch(inputBox.value(), MAX_TOKEN_LEN);
 
   // 2) tokens -> 图片数组
   currentImgs = [];
@@ -80,70 +61,101 @@ function draw() {
     if (images[t]) currentImgs.push(images[t]);
   }
 
-  // 3) 绘制：尽量铺满一行 + 不拉伸
+  // 3) 绘制输出（尽量铺满一行 + 不拉伸）
   drawRowFill(currentImgs);
 }
 
-// —— 最长匹配分词：优先3字，其次2字，最后1字 —— //
+// ---------- 自适应：窗口变化 ----------
+function windowResized() {
+  resizeCanvas(getCanvasWidth(), getCanvasHeight());
+  layoutInput();
+}
+
+// ---------- 画布尺寸策略（电脑/手机自适应） ----------
+function isMobile() {
+  return windowWidth < 768;
+}
+
+function getCanvasWidth() {
+  // 画布宽度：跟屏幕走，但上限 MAX_CANVAS_W
+  return min(windowWidth * 0.95, MAX_CANVAS_W);
+}
+
+function getCanvasHeight() {
+  // 手机更“竖”，给更高比例；电脑略低一些
+  const h = isMobile() ? windowHeight * 0.62 : windowHeight * 0.60;
+  // 高度也限制一个上限，避免超大屏太空
+  return min(h, MAX_CANVAS_H);
+}
+
+// ---------- 输入框样式 ----------
+function styleInput() {
+  inputBox.style("font-size", isMobile() ? "18px" : "18px");
+  inputBox.style("padding", "8px 10px");
+  inputBox.style("border", "none");
+  inputBox.style("border-bottom", "1px solid #000");
+  inputBox.style("outline", "none");
+  inputBox.style("background", "transparent");
+  inputBox.style("text-align", "center");
+  inputBox.style("display", "block");
+}
+
+// 输入框宽度随画布变化（左右留白按比例）
+function layoutInput() {
+  const padding = width * (isMobile() ? 0.06 : 0.10); // 手机留白小一点
+  const w = max(160, width - padding * 2);
+
+  inputBox.size(w, 40);
+  inputBox.style("margin", (isMobile() ? "14px" : "16px") + " auto 0 auto");
+}
+
+// ---------- 最长匹配分词：优先3字，其次2字，最后1字 ----------
 function tokenizeLongestMatch(str, maxLen = 3) {
   const tokens = [];
   let i = 0;
 
   while (i < str.length) {
-    // 跳过空格
-    if (str[i] === " ") {
-      i++;
-      continue;
-    }
+    if (str[i] === " ") { i++; continue; }
 
     let matched = null;
-
     for (let len = maxLen; len >= 1; len--) {
       const part = str.slice(i, i + len);
-      if (images[part]) {
-        matched = part;
-        break;
-      }
+      if (images[part]) { matched = part; break; }
     }
 
     if (matched) {
       tokens.push(matched);
       i += matched.length;
     } else {
-      // 没匹配到（字典里没有），跳过这个字符
+      // 字典里没有就跳过该字符
       i++;
     }
   }
-
   return tokens;
 }
 
-// —— 把图片“铺满一行”：根据数量自动算尺寸 + 等比缩放 —— //
+// ---------- 输出绘制：铺满一行 + 不拉伸 ----------
 function drawRowFill(imgArr) {
   const n = imgArr.length;
   if (n === 0) return;
 
   const availableW = width * FILL_RATIO;
 
-  // gap 初值
   let gap = 20;
-
-  // 先算 iconSize
   let iconSize = (availableW - (n - 1) * gap) / n;
 
-  // gap 联动，更协调
-  gap = iconSize * 0.2;
+  gap = iconSize * 0.20;
   iconSize = (availableW - (n - 1) * gap) / n;
 
-  // 限制最大高度（防止太大）
-  iconSize = min(iconSize, height * 0.42);
+  // 手机端限制更严格，避免太大顶到上下
+  iconSize = min(iconSize, isMobile() ? height * 0.32 : height * 0.42);
 
   const totalW = n * iconSize + (n - 1) * gap;
   const startX = width / 2 - totalW / 2 + iconSize / 2;
-  const y = height / 2 + 10;
+  const y = height / 2 + (isMobile() ? 8 : 12);
 
   imageMode(CENTER);
-  noSmooth(); // 像素图更清晰（如果你是矢量风可去掉）
+  noSmooth(); // 像素图更清晰（如果你是高清非像素，可注释掉）
 
   for (let i = 0; i < n; i++) {
     const img = imgArr[i];
@@ -155,14 +167,4 @@ function drawRowFill(imgArr) {
 
     image(img, startX + i * (iconSize + gap), y, w, h);
   }
-}
-
-// —— 输入框：占满画布宽度（左右留白 INPUT_PADDING） —— //
-function layoutInput() {
-  const w = width - INPUT_PADDING * 2;
-  inputBox.size(w, 38);
-
-  // DOM 元素最稳妥居中方式：block + auto margin
-  inputBox.style("display", "block");
-  inputBox.style("margin", "18px auto 0 auto");
 }

@@ -1,13 +1,31 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-  <meta charset="UTF-8">
-  <title>p5 input demo</title>
-  <!-- 引入 p5.js -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Visual Input</title>
   <script src="https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/p5.js"></script>
+  <style>
+    body{
+      margin:0;
+      height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:#f8f7f5;
+      font-family:sans-serif;
+    }
+    #container{
+      text-align:center;
+    }
+    canvas{
+      display:block;
+      margin:0 auto;
+    }
+  </style>
 </head>
 <body>
-  <!-- 引入你的 p5 程序 -->
+  <div id="container"></div>
   <script src="sketch.js"></script>
 </body>
 </html>

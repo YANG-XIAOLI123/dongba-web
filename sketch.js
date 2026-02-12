@@ -50,28 +50,28 @@ function draw() {
   fill(160);
   textAlign(CENTER);
   textSize(isMobile() ? 12 : 13);
-  text("输入文字（支持1-3字词组），生成对应的视觉符号", width / 2, 34);
+  text("Enter text", width / 2, 34);
 
-  // 1) 最长匹配分词（3→2→1）
+  
   const tokens = tokenizeLongestMatch(inputBox.value(), MAX_TOKEN_LEN);
 
-  // 2) tokens -> 图片数组
+  //图片数组
   currentImgs = [];
   for (const t of tokens) {
     if (images[t]) currentImgs.push(images[t]);
   }
 
-  // 3) 绘制输出（尽量铺满一行 + 不拉伸）
+  //绘制输出
   drawRowFill(currentImgs);
 }
 
-// ---------- 自适应：窗口变化 ----------
+
 function windowResized() {
   resizeCanvas(getCanvasWidth(), getCanvasHeight());
   layoutInput();
 }
 
-// ---------- 画布尺寸策略（电脑/手机自适应） ----------
+
 function isMobile() {
   return windowWidth < 768;
 }
@@ -82,13 +82,13 @@ function getCanvasWidth() {
 }
 
 function getCanvasHeight() {
-  // 手机更“竖”，给更高比例；电脑略低一些
+  
   const h = isMobile() ? windowHeight * 0.62 : windowHeight * 0.60;
-  // 高度也限制一个上限，避免超大屏太空
+  
   return min(h, MAX_CANVAS_H);
 }
 
-// ---------- 输入框样式 ----------
+//输入框样式
 function styleInput() {
   inputBox.style("font-size", isMobile() ? "18px" : "18px");
   inputBox.style("padding", "8px 10px");
@@ -100,16 +100,15 @@ function styleInput() {
   inputBox.style("display", "block");
 }
 
-// 输入框宽度随画布变化（左右留白按比例）
+// 输入框宽度随画布变化
 function layoutInput() {
-  const padding = width * (isMobile() ? 0.06 : 0.10); // 手机留白小一点
+  const padding = width * (isMobile() ? 0.06 : 0.10);
   const w = max(160, width - padding * 2);
 
   inputBox.size(w, 40);
   inputBox.style("margin", (isMobile() ? "14px" : "16px") + " auto 0 auto");
 }
 
-// ---------- 最长匹配分词：优先3字，其次2字，最后1字 ----------
 function tokenizeLongestMatch(str, maxLen = 3) {
   const tokens = [];
   let i = 0;
@@ -134,7 +133,7 @@ function tokenizeLongestMatch(str, maxLen = 3) {
   return tokens;
 }
 
-// ---------- 输出绘制：铺满一行 + 不拉伸 ----------
+
 function drawRowFill(imgArr) {
   const n = imgArr.length;
   if (n === 0) return;
@@ -147,7 +146,7 @@ function drawRowFill(imgArr) {
   gap = iconSize * 0.20;
   iconSize = (availableW - (n - 1) * gap) / n;
 
-  // 手机端限制更严格，避免太大顶到上下
+ 
   iconSize = min(iconSize, isMobile() ? height * 0.32 : height * 0.42);
 
   const totalW = n * iconSize + (n - 1) * gap;
@@ -155,12 +154,12 @@ function drawRowFill(imgArr) {
   const y = height / 2 + (isMobile() ? 8 : 12);
 
   imageMode(CENTER);
-  noSmooth(); // 像素图更清晰（如果你是高清非像素，可注释掉）
+  noSmooth(); 
 
   for (let i = 0; i < n; i++) {
     const img = imgArr[i];
 
-    // 等比缩放，不拉伸
+   
     const s = min(iconSize / img.width, iconSize / img.height);
     const w = img.width * s;
     const h = img.height * s;
